@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Insurance Paperwork Timeline</title>
+<meta name="description" content="Offline yearly insurance-paperwork calendar: enrollment windows, countdowns, document grab lists, call notes, and a printable what-changed recap. Education and admin help only — never advice.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='5' width='26' height='24' rx='3' fill='%231f6f6b'/%3E%3Crect x='3' y='5' width='26' height='7' rx='3' fill='%23155250'/%3E%3Crect x='7' y='16' width='4' height='4' fill='%23f4b942'/%3E%3Crect x='14' y='16' width='4' height='4' fill='%23ffffff'/%3E%3Crect x='21' y='16' width='4' height='4' fill='%23ffffff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f7f4ee;
+    --panel: #ffffff;
+    --ink: #26302e;
+    --muted: #5d6b67;
+    --line: #e2ddd2;
+    --brand: #1f6f6b;
+    --brand-dark: #155250;
+    --brand-soft: #e3f0ee;
+    --accent: #b3701c;
+    --accent-soft: #fbedd6;
+    --danger: #a03a3a;
+    --danger-soft: #f7e3e3;
+    --ok: #2e7d46;
+    --ok-soft: #e2f2e6;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1d2321;
+      --panel: #262e2b;
+      --ink: #ecf1ef;
+      --muted: #a3b0ab;
+      --line: #3a443f;
+      --brand: #5fb8b1;
+      --brand-dark: #3f8f89;
+      --brand-soft: #223836;
+      --accent: #e0a45a;
+      --accent-soft: #3d3222;
+      --danger: #e08a8a;
+      --danger-soft: #3d2a2a;
+      --ok: #7fc793;
+      --ok-soft: #24382a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+  }
+  header.site {
+    padding: 1.2rem 1rem 0.8rem;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  header.site h1 { margin: 0; font-size: 1.5rem; color: var(--brand-dark); }
+  header.site p.sub { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.95rem; }
+  .banner {
+    max-width: 980px;
+    margin: 0.8rem auto 0;
+    padding: 0.7rem 1rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    display: none;
+  }
+  .banner.show { display: block; }
+  nav.views {
+    max-width: 980px;
+    margin: 0.9rem auto 0;
+    padding: 0 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  nav.views button {
+    font: inherit;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  nav.views button[aria-current="true"] {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #fff;
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 1rem; }
+  section.view { display: none; }
+  section.view.active { display: block; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  .card h2 { margin: 0 0 0.4rem; font-size: 1.1rem; }
+  .card h3 { margin: 0.2rem 0 0.4rem; font-size: 1rem; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .note { color: var(--muted); font-size: 0.88rem; margin: 0.3rem 0 0; }
+
+  /* Calendar */
+  .cal-controls { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; }
+  .cal-controls button {
+    font: inherit; padding: 0.25rem 0.7rem;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: var(--panel); color: var(--ink); cursor: pointer;
+  }
+  .cal-row { display: grid; grid-template-columns: minmax(180px, 260px) 1fr; gap: 0.6rem; align-items: center; padding: 0.5rem 0; border-top: 1px solid var(--line); }
+  .cal-row:first-of-type { border-top: none; }
+  .cal-name { font-weight: 600; font-size: 0.95rem; }
+  .cal-dates { color: var(--muted); font-size: 0.8rem; font-weight: 400; display: block; }
+  .cal-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+  .cal-grid .cell { height: 1.4rem; border-radius: 4px; background: var(--brand-soft); position: relative; }
+  .cal-grid .cell.on { background: var(--brand); }
+  .cal-grid .cell.today { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .cal-months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; font-size: 0.7rem; color: var(--muted); text-align: center; margin-top: 0.3rem; }
+  .cal-legend { margin-top: 0.6rem; }
+
+  /* Countdown cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .count-card { border-left: 5px solid var(--brand); }
+  .count-card.state-open { border-left-color: var(--ok); }
+  .count-card.state-upcoming { border-left-color: var(--accent); }
+  .count-card.state-closed, .count-card.state-unknown { border-left-color: var(--muted); }
+  .badge {
+    display: inline-block; font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 0.15rem 0.55rem; border-radius: 999px;
+  }
+  .badge.open { background: var(--ok-soft); color: var(--ok); }
+  .badge.upcoming { background: var(--accent-soft); color: var(--accent); }
+  .badge.closed, .badge.unknown { background: var(--line); color: var(--muted); }
+  .count-big { font-size: 1.5rem; font-weight: 700; margin: 0.4rem 0 0.1rem; }
+  .field-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: end; margin: 0.5rem 0; }
+  .field-row label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.15rem; }
+  input[type="date"], input[type="text"], input[type="tel"], select, textarea {
+    font: inherit; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 0.4rem 0.55rem;
+  }
+  textarea { width: 100%; min-height: 4.2rem; resize: vertical; }
+  button.primary {
+    font: inherit; font-weight: 600;
+    background: var(--brand); color: #fff;
+    border: 1px solid var(--brand); border-radius: 8px;
+    padding: 0.45rem 0.9rem; cursor: pointer;
+  }
+  button.ghost {
+    font: inherit; background: transparent; color: var(--brand-dark);
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 0.35rem 0.75rem; cursor: pointer;
+  }
+  button.danger-text {
+    font: inherit; background: none; border: none; cursor: pointer;
+    color: var(--danger); text-decoration: underline; padding: 0;
+  }
+
+  /* Checklists */
+  ul.checklist { list-style: none; margin: 0.4rem 0 0; padding: 0; }
+  ul.checklist li {
+    display: flex; align-items: center; gap: 0.55rem;
+    padding: 0.35rem 0; border-top: 1px dashed var(--line);
+  }
+  ul.checklist li:first-child { border-top: none; }
+  ul.checklist li.done span.text { text-decoration: line-through; color: var(--muted); }
+  ul.checklist li span.text { flex: 1; }
+  .add-item { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+  .add-item input[type="text"] { flex: 1; }
+
+  /* Notes & recap lists */
+  .entry { border-top: 1px solid var(--line); padding: 0.6rem 0; }
+  .entry:first-of-type { border-top: none; }
+  .entry .meta { color: var(--muted); font-size: 0.82rem; }
+  .entry .body { white-space: pre-wrap; margin: 0.2rem 0 0; }
+  form.stack label { display: block; margin-bottom: 0.6rem; }
+  form.stack .lbl { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.15rem; }
+  form.stack input[type="text"], form.stack input[type="date"], form.stack select { width: 100%; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  @media (max-width: 560px) { .two-col { grid-template-columns: 1fr; } }
+
+  footer.site {
+    max-width: 980px; margin: 1.5rem auto 2rem; padding: 0 1rem;
+    color: var(--muted); font-size: 0.85rem;
+  }
+  footer.site a { color: var(--brand-dark); }
+
+  /* Print: only the recap */
+  @media print {
+    body { background: #fff; color: #000; }
+    header.site p.sub, nav.views, .no-print, form.stack, .banner { display: none !important; }
+    section.view { display: none !important; }
+    section.view#view-recap { display: block !important; }
+    .card { border: none; padding: 0.4rem 0; page-break-inside: avoid; }
+    a { color: #000; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+
+<script id="window-math">
+'use strict';
+/* Pure date/window math and static data. No DOM access here.
+   This block is extracted and unit-tested by test/window-math.test.mjs. */
+
+var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function dateAt(year, month, day) {
+  return new Date(year, month - 1, day);
+}
+function startOfDay(d) {
+  var c = new Date(d.getTime());
+  c.setHours(0, 0, 0, 0);
+  return c;
+}
+function parseISO(s) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || '').trim());
+  if (!m) return null;
+  var d = dateAt(Number(m[1]), Number(m[2]), Number(m[3]));
+  if (d.getMonth() !== Number(m[2]) - 1 || d.getDate() !== Number(m[3])) return null;
+  return d;
+}
+function toISO(d) {
+  var y = d.getFullYear();
+  var m = String(d.getMonth() + 1).padStart(2, '0');
+  var day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+function daysBetween(a, b) {
+  return Math.round((startOfDay(b) - startOfDay(a)) / 86400000);
+}
+function addDays(d, n) {
+  var c = startOfDay(d);
+  c.setDate(c.getDate() + n);
+  return c;
+}
+function lastDayOfMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+function fmtDate(d) {
+  return MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+}
+
+/* An "anchored" window repeats every year from fixed month/day and may cross
+   the year boundary (e.g. Nov 1 -> Jan 15). "custom" windows use explicit
+   dates supplied by the user. "yearRound" windows are always open. */
+function crossesYear(win) {
+  return win.open.m > win.close.m ||
+    (win.open.m === win.close.m && win.open.d > win.close.d);
+}
+function windowForYear(win, year) {
+  var start = dateAt(year, win.open.m, win.open.d);
+  var end = dateAt(year + (crossesYear(win) ? 1 : 0), win.close.m, win.close.d);
+  return { start: start, end: end };
+}
+function isWithin(date, start, end) {
+  var d = startOfDay(date);
+  return d >= startOfDay(start) && d <= startOfDay(end);
+}
+function nextWindowStart(win, onDate, custom) {
+  if (win.yearRound) return null;
+  if (win.custom) {
+    if (!custom || !custom.start || !custom.end) return null;
+    var s = parseISO(custom.start);
+    if (s && startOfDay(s) > startOfDay(onDate)) return s;
+    return null;
+  }
+  var d0 = startOfDay(onDate);
+  var years = [d0.getFullYear(), d0.getFullYear() + 1];
+  for (var i = 0; i < years.length; i++) {
+    var w = windowForYear(win, years[i]);
+    if (startOfDay(w.start) > d0) return w.start;
+  }
+  return null;
+}
+function windowStatus(win, onDate, custom) {
+  if (win.yearRound) {
+    return { state: 'open', yearRound: true, daysRemaining: null, start: null, end: null, nextStart: null, nextEnd: null };
+  }
+  if (win.custom) {
+    var s = custom && custom.start ? parseISO(custom.start) : null;
+    var e = custom && custom.end ? parseISO(custom.end) : null;
+    if (!s || !e || startOfDay(e) < startOfDay(s)) {
+      return { state: 'unknown', daysRemaining: null, start: null, end: null, nextStart: null, nextEnd: null };
+    }
+    if (isWithin(onDate, s, e)) {
+      return { state: 'open', daysRemaining: daysBetween(onDate, e), start: s, end: e, nextStart: null, nextEnd: null };
+    }
+    if (startOfDay(onDate) < startOfDay(s)) {
+      return { state: 'upcoming', daysUntilOpen: daysBetween(onDate, s), start: null, end: null, nextStart: s, nextEnd: e };
+    }
+    return { state: 'closed', daysRemaining: null, start: null, end: null, nextStart: null, nextEnd: null };
+  }
+  var d0 = startOfDay(onDate);
+  var y = d0.getFullYear();
+  var cur = null;
+  var years = [y - 1, y, y + 1];
+  for (var i = 0; i < years.length; i++) {
+    var w = windowForYear(win, years[i]);
+    if (isWithin(d0, w.start, w.end)) { cur = w; break; }
+  }
+  if (cur) {
+    return {
+      state: 'open',
+      daysRemaining: daysBetween(d0, cur.end),
+      start: cur.start, end: cur.end,
+      nextStart: nextWindowStart(win, addDays(cur.end, 1)),
+      nextEnd: null
+    };
+  }
+  var ns = nextWindowStart(win, d0);
+  if (!ns) {
+    return { state: 'unknown', daysRemaining: null, start: null, end: null, nextStart: null, nextEnd: null };
+  }
+  var ne = windowForYear(win, ns.getFullYear()).end;
+  return {
+    state: 'upcoming',
+    daysUntilOpen: daysBetween(d0, ns),
+    start: null, end: null,
+    nextStart: ns, nextEnd: ne
+  };
+}
+/* A Special Enrollment Period is treated (education-only simplification) as a
+   60-day window that starts on the qualifying life event date. */
+function sepWindow(eventDate, days) {
+  var n = typeof days === 'number' ? days : 60;
+  return { start: startOfDay(eventDate), end: addDays(eventDate, n) };
+}
+function formatCountdown(st) {
+  if (!st) return '';
+  if (st.state === 'unknown') return 'Set your dates to start tracking';
+  if (st.state === 'closed') return 'Window closed';
+  if (st.yearRound) return 'Open year-round';
+  if (st.state === 'open') {
+    if (st.daysRemaining === 0) return 'Last day — deadline is today';
+    if (st.daysRemaining === 1) return '1 day left';
+    return st.daysRemaining + ' days left';
+  }
+  if (st.state === 'upcoming') {
+    if (st.daysUntilOpen === 0) return 'Opens today';
+    if (st.daysUntilOpen === 1) return 'Opens tomorrow';
+    return 'Opens in ' + st.daysUntilOpen + ' days';
+  }
+  return '';
+}
+/* Which calendar months (1-12) does a window touch within a given year? */
+function coveredMonths(win, year, custom) {
+  var out = [];
+  for (var m = 1; m <= 12; m++) {
+    var mStart = dateAt(year, m, 1);
+    var mEnd = dateAt(year, m, lastDayOfMonth(year, m));
+    var hit = false;
+    if (win.yearRound) {
+      hit = true;
+    } else if (win.custom) {
+      if (custom && custom.start && custom.end) {
+        var s = parseISO(custom.start);
+        var e = parseISO(custom.end);
+        if (s && e) hit = startOfDay(s) <= startOfDay(mEnd) && startOfDay(e) >= startOfDay(mStart);
+      }
+    } else {
+      var years = [year - 1, year, year + 1];
+      for (var i = 0; i < years.length && !hit; i++) {
+        var w = windowForYear(win, years[i]);
+        if (startOfDay(w.start) <= startOfDay(mEnd) && startOfDay(w.end) >= startOfDay(mStart)) hit = true;
+      }
+    }
+    if (hit) out.push(m);
+  }
+  return out;
+}
+/* January nudge: is a yearly recap review due right now? */
+function needsJanuaryReview(now, lastReviewedISO) {
+  var d = startOfDay(now);
+  if (d.getMonth() !== 0) return false;
+  var jan1 = dateAt(d.getFullYear(), 1, 1);
+  if (!lastReviewedISO) return true;
+  var lr = parseISO(lastReviewedISO);
+  return !lr || lr < jan1;
+}
+
+var PLAN_WINDOWS = [
+  {
+    id: 'marketplace',
+    name: 'Marketplace (ACA) Open Enrollment',
+    open: { m: 11, d: 1 },
+    close: { m: 1, d: 15 },
+    note: 'Most states run Nov 1 - Jan 15; some state marketplaces differ. Enroll by Dec 15 in most states for Jan 1 coverage. Check HealthCare.gov for your state.'
+  },
+  {
+    id: 'medicare-aep',
+    name: 'Medicare Open Enrollment (Annual Enrollment Period)',
+    open: { m: 10, d: 15 },
+    close: { m: 12, d: 7 },
+    note: 'Switch Medicare Advantage or Part D plans; changes take effect Jan 1. See Medicare.gov.'
+  },
+  {
+    id: 'medicare-maoep',
+    name: 'Medicare Advantage Open Enrollment',
+    open: { m: 1, d: 1 },
+    close: { m: 3, d: 31 },
+    note: 'If you already have a Medicare Advantage plan, you can switch plans or drop back to Original Medicare once during this window.'
+  },
+  {
+    id: 'employer',
+    name: 'Employer Open Enrollment',
+    custom: true,
+    note: 'Every employer picks its own dates, often a few weeks in October or November. Set yours below once HR announces them.'
+  },
+  {
+    id: 'sep',
+    name: 'Special Enrollment Period (after a life event)',
+    eventBased: true,
+    note: 'Qualifying life events (losing other coverage, moving, marriage, birth, adoption) usually open a 60-day window. Rules vary — confirm with the plan or HealthCare.gov.'
+  },
+  {
+    id: 'medicaid',
+    name: 'Medicaid & CHIP',
+    yearRound: true,
+    note: 'Enrollment is open year-round in every state. Renewals and income checks happen on your state\'s schedule.'
+  }
+];
+
+var DEFAULT_CHECKLISTS = {
+  'marketplace': [
+    'Last few paycheck stubs (pay sheet)',
+    'Prior plan details: plan name, member ID, premium',
+    'This year\'s W-2 or last tax return',
+    'Doctor list and current medications',
+    'Any letters from your current plan (renewal, termination)',
+    'Questions saved from your call notes'
+  ],
+  'medicare-aep': [
+    'Your Medicare card (red, white, and blue)',
+    'Annual Notice of Change (ANOC) from your current plan',
+    'Drug list with doses and pharmacies',
+    'Doctor list',
+    'Prior plan details if you are switching',
+    'Letters from Social Security or your plan'
+  ],
+  'medicare-maoep': [
+    'Your Medicare card',
+    'Current Medicare Advantage plan details',
+    'Doctor list and current medications',
+    'Prior plan details if you are switching back'
+  ],
+  'employer': [
+    'Last paycheck stub (pay sheet)',
+    'Current elections summary or plan booklet',
+    'Prior plan details if you are switching',
+    'Dependents\' names and birthdays (keep the documents, not copies, on hand)',
+    'Doctor list and current medications',
+    'Questions saved from HR calls'
+  ],
+  'sep': [
+    'Proof of the event (marriage record, lease, birth record)',
+    'Loss-of-coverage letter from your prior plan',
+    'Paycheck stubs (pay sheet)',
+    'Prior plan details: plan name, member ID, premium'
+  ],
+  'medicaid': [
+    'Paycheck stubs or other income proof',
+    'Prior plan details',
+    'Recent mail showing your address (utility, lease)',
+    'ID documents — bring them in person; never type numbers into apps'
+  ]
+};
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    MONTHS: MONTHS,
+    dateAt: dateAt,
+    startOfDay: startOfDay,
+    parseISO: parseISO,
+    toISO: toISO,
+    daysBetween: daysBetween,
+    addDays: addDays,
+    lastDayOfMonth: lastDayOfMonth,
+    fmtDate: fmtDate,
+    crossesYear: crossesYear,
+    windowForYear: windowForYear,
+    isWithin: isWithin,
+    nextWindowStart: nextWindowStart,
+    windowStatus: windowStatus,
+    sepWindow: sepWindow,
+    formatCountdown: formatCountdown,
+    coveredMonths: coveredMonths,
+    needsJanuaryReview: needsJanuaryReview,
+    PLAN_WINDOWS: PLAN_WINDOWS,
+    DEFAULT_CHECKLISTS: DEFAULT_CHECKLISTS
+  };
+}
+</script>
+
+<script id="app-ui">
+'use strict';
+/* UI layer. All state lives in localStorage under the "iet." prefix.
+   No network calls, no analytics, no personal data leaves this device. */
+
+(function () {
+  var STORE = {
+    checklists: 'iet.checklists',
+    callNotes: 'iet.callNotes',
+    changes: 'iet.changes',
+    employer: 'iet.employerWindow',
+    sepEvents: 'iet.sepEvents',
+    recapReviewed: 'iet.recapLastReviewed'
+  };
+
+  function load(key, fallback) {
+    try {
+      var raw = localStorage.getItem(key);
+      if (raw == null) return fallback;
+      return JSON.parse(raw);
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function save(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) { /* storage full or blocked: keep the app usable in-memory */ }
+  }
+  function uid() {
+    return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  var winById = {};
+  PLAN_WINDOWS.forEach(function (w) { winById[w.id] = w; });
+
+  var state = {
+    checklists: load(STORE.checklists, null),
+    callNotes: load(STORE.callNotes, []),
+    changes: load(STORE.changes, []),
+    employer: load(STORE.employer, null),
+    sepEvents: load(STORE.sepEvents, []),
+    recapReviewed: load(STORE.recapReviewed, null)
+  };
+  if (!state.checklists) {
+    state.checklists = {};
+    PLAN_WINDOWS.forEach(function (w) {
+      if (DEFAULT_CHECKLISTS[w.id]) {
+        state.checklists[w.id] = DEFAULT_CHECKLISTS[w.id].map(function (text) {
+          return { id: uid(), text: text, done: false };
+        });
+      }
+    });
+    save(STORE.checklists, state.checklists);
+  }
+
+  function today() { return startOfDay(new Date()); }
+
+  /* ---------- January banner ---------- */
+  function renderBanner() {
+    var banner = document.getElementById('jan-banner');
+    if (needsJanuaryReview(new Date(), state.recapReviewed)) {
+      banner.classList.add('show');
+    } else {
+      banner.classList.remove('show');
+    }
+  }
+
+  /* ---------- View switching ---------- */
+  var views = ['calendar', 'countdowns', 'checklists', 'notes', 'recap'];
+  function showView(name) {
+    views.forEach(function (v) {
+      document.getElementById('view-' + v).classList.toggle('active', v === name);
+      var btn = document.getElementById('nav-' + v);
+      if (btn) btn.setAttribute('aria-current', v === name ? 'true' : 'false');
+    });
+  }
+
+  /* ---------- Calendar ---------- */
+  var selectedYear = new Date().getFullYear();
+  function renderCalendar() {
+    document.getElementById('cal-year').textContent = selectedYear;
+    var rows = document.getElementById('cal-rows');
+    var t = today();
+    var html = '';
+    PLAN_WINDOWS.forEach(function (w) {
+      var months;
+      var datesLabel;
+      if (w.yearRound) {
+        months = coveredMonths(w, selectedYear);
+        datesLabel = 'All year';
+      } else if (w.eventBased) {
+        months = [];
+        state.sepEvents.forEach(function (ev) {
+          var ed = parseISO(ev.date);
+          if (!ed) return;
+          coveredMonths({ custom: true }, selectedYear, sepWindow(ed)).forEach(function (m) {
+            if (months.indexOf(m) === -1) months.push(m);
+          });
+        });
+        months.sort(function (a, b) { return a - b; });
+        datesLabel = state.sepEvents.length
+          ? '60 days after each event you add'
+          : 'Add an event in Countdowns to see it here';
+      } else if (w.custom) {
+        months = coveredMonths(w, selectedYear, state.employer);
+        datesLabel = state.employer && state.employer.start
+          ? fmtDate(parseISO(state.employer.start)) + ' - ' + fmtDate(parseISO(state.employer.end))
+          : 'Set your dates in Countdowns';
+      } else {
+        months = coveredMonths(w, selectedYear);
+        var wThis = windowForYear(w, selectedYear);
+        var wPrev = windowForYear(w, selectedYear - 1);
+        var parts = [];
+        if (isWithin(wPrev.end, dateAt(selectedYear, 1, 1), dateAt(selectedYear, 12, 31))) {
+          parts.push('Jan ' + w.close.d + ' (from ' + wPrev.start.getFullYear() + ')');
+        }
+        parts.push(fmtDate(wThis.start).replace(/, \d{4}$/, ''));
+        if (crossesYear(w)) parts.push('Jan ' + w.close.d + ' ' + (wThis.end.getFullYear()));
+        else parts.push(fmtDate(wThis.end).replace(/, \d{4}$/, ''));
+        datesLabel = parts.join(' - ');
+      }
+      var cells = '';
+      for (var m = 1; m <= 12; m++) {
+        var cls = 'cell' + (months.indexOf(m) !== -1 ? ' on' : '');
+        if (t.getFullYear() === selectedYear && t.getMonth() + 1 === m) cls += ' today';
+        cells += '<div class="' + cls + '" title="' + MONTHS[m - 1] + '"></div>';
+      }
+      html += '<div class="cal-row">' +
+        '<div class="cal-name">' + esc(w.name) +
+        '<span class="cal-dates">' + esc(datesLabel) + '</span></div>' +
+        '<div class="cal-grid">' + cells + '</div></div>';
+    });
+    rows.innerHTML = html;
+  }
+
+  /* ---------- Countdowns ---------- */
+  function countdownCard(inner) {
+    return '<div class="card count-card">' + inner + '</div>';
+  }
+  function renderCountdowns() {
+    var host = document.getElementById('count-cards');
+    var t = today();
+    var html = '';
+    PLAN_WINDOWS.forEach(function (w) {
+      var st, dates;
+      if (w.custom) {
+        st = windowStatus(w, t, state.employer);
+        dates = st.start ? fmtDate(st.start) + ' - ' + fmtDate(st.end)
+          : (st.nextStart ? fmtDate(st.nextStart) + ' - ' + fmtDate(st.nextEnd) : 'Dates not set');
+      } else if (w.yearRound) {
+        st = windowStatus(w, t);
+        dates = 'Every day of the year';
+      } else if (w.eventBased) {
+        html += ''; // rendered separately below
+        return;
+      } else {
+        st = windowStatus(w, t);
+        dates = st.start ? fmtDate(st.start) + ' - ' + fmtDate(st.end)
+          : (st.nextStart ? fmtDate(st.nextStart) + ' - ' + fmtDate(st.nextEnd) : '');
+      }
+      html += countdownCard(
+        '<span class="badge ' + st.state + '">' + st.state + '</span>' +
+        '<h2>' + esc(w.name) + '</h2>' +
+        '<div class="count-big">' + esc(formatCountdown(st)) + '</div>' +
+        '<div class="muted">' + esc(dates) + '</div>' +
+        '<p class="note">' + esc(w.note) + '</p>' +
+        (w.custom ? customDateForm() : '')
+      );
+    });
+    state.sepEvents.forEach(function (ev) {
+      var ed = parseISO(ev.date);
+      var win = ed ? sepWindow(ed) : null;
+      var st = win ? windowStatus({ custom: true }, t, { start: toISO(win.start), end: toISO(win.end) }) : { state: 'unknown' };
+      html += countdownCard(
+        '<span class="badge ' + st.state + '">' + st.state + '</span>' +
+        '<h2>Special Enrollment: ' + esc(ev.label || 'Life event') + '</h2>' +
+        '<div class="count-big">' + esc(formatCountdown(st)) + '</div>' +
+        '<div class="muted">' + (win ? esc(fmtDate(win.start) + ' - ' + fmtDate(win.end)) : '') + '</div>' +
+        '<p class="note">' + esc(winById.sep.note) + '</p>' +
+        '<button class="danger-text no-print" data-del-sep="' + esc(ev.id) + '">Remove event</button>'
+      );
+    });
+    html += countdownCard(
+      '<h2>Add a life event (Special Enrollment)</h2>' +
+      '<p class="note">' + esc(winById.sep.note) + '</p>' +
+      '<div class="field-row no-print">' +
+      '<div><label for="sep-label">What happened</label>' +
+      '<input type="text" id="sep-label" placeholder="e.g., Moved to a new county"></div>' +
+      '<div><label for="sep-date">Event date</label>' +
+      '<input type="date" id="sep-date"></div>' +
+      '<button class="primary" id="sep-add">Add</button></div>'
+    );
+    host.innerHTML = html;
+  }
+  function customDateForm() {
+    var s = state.employer && state.employer.start ? state.employer.start : '';
+    var e = state.employer && state.employer.end ? state.employer.end : '';
+    return '<div class="field-row no-print">' +
+      '<div><label for="emp-start">Starts</label><input type="date" id="emp-start" value="' + esc(s) + '"></div>' +
+      '<div><label for="emp-end">Ends</label><input type="date" id="emp-end" value="' + esc(e) + '"></div>' +
+      '<button class="primary" id="emp-save">Save dates</button></div>';
+  }
+
+  /* ---------- Checklists ---------- */
+  function renderChecklists() {
+    var host = document.getElementById('checklist-host');
+    var html = '';
+    PLAN_WINDOWS.forEach(function (w) {
+      var items = state.checklists[w.id] || [];
+      if (!items.length && !DEFAULT_CHECKLISTS[w.id]) return;
+      var done = items.filter(function (i) { return i.done; }).length;
+      html += '<div class="card"><h2>' + esc(w.name) + '</h2>' +
+        '<p class="muted">' + done + ' of ' + items.length + ' gathered</p><ul class="checklist">';
+      items.forEach(function (item) {
+        html += '<li class="' + (item.done ? 'done' : '') + '">' +
+          '<input type="checkbox" data-check="' + esc(w.id) + '" data-id="' + esc(item.id) + '"' + (item.done ? ' checked' : '') + '>' +
+          '<span class="text">' + esc(item.text) + '</span>' +
+          '<button class="danger-text no-print" data-del-item="' + esc(w.id) + '" data-id="' + esc(item.id) + '" aria-label="Remove item">remove</button></li>';
+      });
+      html += '</ul><div class="add-item no-print">' +
+        '<input type="text" id="add-' + esc(w.id) + '" placeholder="Add a document or task">' +
+        '<button class="ghost" data-add-item="' + esc(w.id) + '">Add</button>' +
+        '<button class="ghost" data-reset-item="' + esc(w.id) + '">Reset list</button></div></div>';
+    });
+    host.innerHTML = html;
+  }
+
+  /* ---------- Call notes ---------- */
+  function renderNotes() {
+    var host = document.getElementById('notes-list');
+    if (!state.callNotes.length) {
+      host.innerHTML = '<p class="muted">No calls logged yet. Jot down who you called, when, and what they said — future-you will thank you.</p>';
+      return;
+    }
+    var sorted = state.callNotes.slice().sort(function (a, b) { return b.date < a.date ? -1 : 1; });
+    host.innerHTML = sorted.map(function (n) {
+      var d = parseISO(n.date);
+      return '<div class="entry"><strong>' + esc(n.who || 'Unknown contact') + '</strong>' +
+        '<div class="meta">' + (d ? esc(fmtDate(d)) : esc(n.date)) +
+        (n.phone ? ' · ' + esc(n.phone) : '') +
+        (n.topic ? ' · ' + esc(n.topic) : '') + '</div>' +
+        '<p class="body">' + esc(n.notes) + '</p>' +
+        '<button class="danger-text no-print" data-del-note="' + esc(n.id) + '">Delete</button></div>';
+    }).join('');
+  }
+
+  /* ---------- Recap ---------- */
+  function renderRecap() {
+    var host = document.getElementById('recap-content');
+    var t = today();
+    var lines = '';
+    lines += '<div class="card"><h2>What changed — ' + t.getFullYear() + '</h2>';
+    if (state.recapReviewed) {
+      var lr = parseISO(state.recapReviewed);
+      lines += '<p class="muted">Last reviewed: ' + (lr ? fmtDate(lr) : state.recapReviewed) + '</p>';
+    }
+    if (!state.changes.length) {
+      lines += '<p class="muted">No changes recorded yet. Add one whenever a plan, premium, doctor, or coverage detail changes.</p>';
+    } else {
+      var sorted = state.changes.slice().sort(function (a, b) { return b.date < a.date ? -1 : 1; });
+      lines += sorted.map(function (c) {
+        var d = parseISO(c.date);
+        var eff = parseISO(c.effective);
+        return '<div class="entry"><strong>' + (d ? esc(fmtDate(d)) : esc(c.date)) + ' — ' + esc(c.what) + '</strong>' +
+          '<div class="meta">' +
+          (c.plan ? esc(c.plan) + ' · ' : '') +
+          (eff ? 'Effective ' + esc(fmtDate(eff)) + ' · ' : '') +
+          (c.premium ? 'Premium: ' + esc(c.premium) : '') +
+          '</div></div>';
+      }).join('');
+    }
+    lines += '</div>';
+
+    lines += '<div class="card"><h2>Call notes from the year</h2>';
+    if (!state.callNotes.length) {
+      lines += '<p class="muted">No calls logged.</p>';
+    } else {
+      lines += '<p class="muted">' + state.callNotes.length + ' call' + (state.callNotes.length === 1 ? '' : 's') + ' logged. Skim these before January calls — they usually hold the follow-ups.</p>';
+      lines += state.callNotes.slice().sort(function (a, b) { return b.date < a.date ? -1 : 1; }).map(function (n) {
+        var d = parseISO(n.date);
+        return '<div class="entry"><strong>' + (d ? esc(fmtDate(d)) : esc(n.date)) + ' — ' + esc(n.who || 'Unknown contact') + '</strong>' +
+          (n.topic ? '<div class="meta">' + esc(n.topic) + '</div>' : '') +
+          '<p class="body">' + esc(n.notes) + '</p></div>';
+      }).join('');
+    }
+    lines += '</div>';
+
+    lines += '<div class="card"><h2>Document checklists status</h2>';
+    PLAN_WINDOWS.forEach(function (w) {
+      var items = state.checklists[w.id] || [];
+      if (!items.length) return;
+      var done = items.filter(function (i) { return i.done; }).length;
+      lines += '<div class="entry"><strong>' + esc(w.name) + '</strong>' +
+        '<div class="meta">' + done + ' of ' + items.length + ' gathered' +
+        (done < items.length ? ' — still open: ' + esc(items.filter(function (i) { return !i.done; }).map(function (i) { return i.text; }).join('; ')) : '') +
+        '</div></div>';
+    });
+    lines += '</div>';
+
+    lines += '<div class="card"><h2>Enrollment windows used this year</h2>';
+    PLAN_WINDOWS.forEach(function (w) {
+      if (w.eventBased) {
+        if (state.sepEvents.length) {
+          state.sepEvents.forEach(function (ev) {
+            var ed = parseISO(ev.date);
+            var win = ed ? sepWindow(ed) : null;
+            lines += '<div class="entry"><strong>Special Enrollment: ' + esc(ev.label || 'Life event') + '</strong>' +
+              '<div class="meta">' + (win ? esc(fmtDate(win.start) + ' - ' + fmtDate(win.end)) : '') + '</div></div>';
+          });
+        }
+        return;
+      }
+      var st = w.custom ? windowStatus(w, t, state.employer) : windowStatus(w, t);
+      if (w.yearRound) {
+        lines += '<div class="entry"><strong>' + esc(w.name) + '</strong><div class="meta">Open year-round</div></div>';
+      } else if (st.start || st.nextStart) {
+        var s = st.start || st.nextStart;
+        var e = st.end || st.nextEnd;
+        lines += '<div class="entry"><strong>' + esc(w.name) + '</strong><div class="meta">' + esc(fmtDate(s) + ' - ' + fmtDate(e)) + '</div></div>';
+      }
+    });
+    lines += '</div>';
+
+    lines += '<div class="card"><h2>Before you call or enroll</h2>' +
+      '<p class="note">This recap is education and admin help, never advice. Dates and rules vary by state and plan — confirm details with HealthCare.gov, Medicare.gov, your state Medicaid office, or your HR team.</p></div>';
+
+    host.innerHTML = lines;
+  }
+
+  /* ---------- Events ---------- */
+  function bindGlobal() {
+    views.forEach(function (v) {
+      var btn = document.getElementById('nav-' + v);
+      if (btn) btn.addEventListener('click', function () { showView(v); });
+    });
+    document.getElementById('cal-prev').addEventListener('click', function () { selectedYear--; renderCalendar(); });
+    document.getElementById('cal-next').addEventListener('click', function () { selectedYear++; renderCalendar(); });
+
+    document.getElementById('count-cards').addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.id === 'emp-save') {
+        var s = document.getElementById('emp-start').value;
+        var en = document.getElementById('emp-end').value;
+        if (parseISO(s) && parseISO(en)) {
+          state.employer = { start: s, end: en };
+          save(STORE.employer, state.employer);
+          renderCountdowns();
+          renderCalendar();
+        }
+      } else if (t.id === 'sep-add') {
+        var label = document.getElementById('sep-label').value.trim();
+        var date = document.getElementById('sep-date').value;
+        if (parseISO(date)) {
+          state.sepEvents.push({ id: uid(), label: label, date: date });
+          save(STORE.sepEvents, state.sepEvents);
+          renderCountdowns();
+          renderCalendar();
+        }
+      } else if (t.getAttribute && t.getAttribute('data-del-sep')) {
+        var id = t.getAttribute('data-del-sep');
+        state.sepEvents = state.sepEvents.filter(function (ev) { return ev.id !== id; });
+        save(STORE.sepEvents, state.sepEvents);
+        renderCountdowns();
+        renderCalendar();
+      }
+    });
+
+    document.getElementById('checklist-host').addEventListener('click', function (e) {
+      var t = e.target;
+      var addId = t.getAttribute && t.getAttribute('data-add-item');
+      var resetId = t.getAttribute && t.getAttribute('data-reset-item');
+      var delId = t.getAttribute && t.getAttribute('data-del-item');
+      if (addId) {
+        var input = document.getElementById('add-' + addId);
+        var text = input.value.trim();
+        if (!text) return;
+        if (!state.checklists[addId]) state.checklists[addId] = [];
+        state.checklists[addId].push({ id: uid(), text: text, done: false });
+        save(STORE.checklists, state.checklists);
+        renderChecklists();
+      } else if (resetId) {
+        if (DEFAULT_CHECKLISTS[resetId] && window.confirm('Reset this list to the starter documents?')) {
+          state.checklists[resetId] = DEFAULT_CHECKLISTS[resetId].map(function (text) {
+            return { id: uid(), text: text, done: false };
+          });
+          save(STORE.checklists, state.checklists);
+          renderChecklists();
+        }
+      } else if (delId) {
+        var itemId = t.getAttribute('data-id');
+        state.checklists[delId] = state.checklists[delId].filter(function (i) { return i.id !== itemId; });
+        save(STORE.checklists, state.checklists);
+        renderChecklists();
+      }
+    });
+    document.getElementById('checklist-host').addEventListener('change', function (e) {
+      var t = e.target;
+      var winId = t.getAttribute && t.getAttribute('data-check');
+      if (!winId) return;
+      var itemId = t.getAttribute('data-id');
+      state.checklists[winId].forEach(function (i) {
+        if (i.id === itemId) i.done = t.checked;
+      });
+      save(STORE.checklists, state.checklists);
+      renderChecklists();
+      renderRecap();
+    });
+
+    document.getElementById('note-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var date = document.getElementById('note-date').value;
+      if (!parseISO(date)) return;
+      state.callNotes.push({
+        id: uid(),
+        date: date,
+        who: document.getElementById('note-who').value.trim(),
+        phone: document.getElementById('note-phone').value.trim(),
+        topic: document.getElementById('note-topic').value.trim(),
+        notes: document.getElementById('note-text').value.trim()
+      });
+      save(STORE.callNotes, state.callNotes);
+      document.getElementById('note-form').reset();
+      document.getElementById('note-date').value = toISO(today());
+      renderNotes();
+      renderRecap();
+    });
+    document.getElementById('notes-list').addEventListener('click', function (e) {
+      var id = e.target.getAttribute && e.target.getAttribute('data-del-note');
+      if (!id) return;
+      state.callNotes = state.callNotes.filter(function (n) { return n.id !== id; });
+      save(STORE.callNotes, state.callNotes);
+      renderNotes();
+      renderRecap();
+    });
+
+    document.getElementById('change-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var date = document.getElementById('change-date').value;
+      if (!parseISO(date)) return;
+      state.changes.push({
+        id: uid(),
+        date: date,
+        plan: document.getElementById('change-plan').value,
+        what: document.getElementById('change-what').value.trim(),
+        effective: document.getElementById('change-effective').value,
+        premium: document.getElementById('change-premium').value.trim()
+      });
+      save(STORE.changes, state.changes);
+      document.getElementById('change-form').reset();
+      document.getElementById('change-date').value = toISO(today());
+      renderRecap();
+    });
+    document.getElementById('recap-content').addEventListener('click', function (e) {
+      var id = e.target.getAttribute && e.target.getAttribute('data-del-change');
+      if (!id) return;
+      state.changes = state.changes.filter(function (c) { return c.id !== id; });
+      save(STORE.changes, state.changes);
+      renderRecap();
+    });
+
+    document.getElementById('print-recap').addEventListener('click', function () {
+      showView('recap');
+      window.print();
+    });
+    document.getElementById('mark-reviewed').addEventListener('click', function () {
+      state.recapReviewed = toISO(today());
+      save(STORE.recapReviewed, state.recapReviewed);
+      renderBanner();
+      renderRecap();
+    });
+  }
+
+  /* ---------- Init ---------- */
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('note-date').value = toISO(today());
+    document.getElementById('change-date').value = toISO(today());
+    bindGlobal();
+    renderBanner();
+    renderCalendar();
+    renderCountdowns();
+    renderChecklists();
+    renderNotes();
+    renderRecap();
+    showView('calendar');
+  });
+})();
+</script>
+
+<header class="site">
+  <h1>Insurance Paperwork Timeline</h1>
+  <p class="sub">Your yearly insurance-paperwork calendar — windows, deadlines, documents, and call notes. Education and admin help, never advice.</p>
+</header>
+
+<div class="banner" id="jan-banner" role="status">
+  <strong>It's January — time for your yearly recap.</strong>
+  Open the <em>Recap</em> tab, print the "what changed" summary, and review it with a cup of coffee. Then mark it reviewed.
+</div>
+
+<nav class="views" aria-label="Sections">
+  <button id="nav-calendar" aria-current="true">Calendar</button>
+  <button id="nav-countdowns">Countdowns</button>
+  <button id="nav-checklists">Checklists</button>
+  <button id="nav-notes">Call Notes</button>
+  <button id="nav-recap">Recap</button>
+</nav>
+
+<main>
+  <section class="view active" id="view-calendar" aria-label="Yearly calendar">
+    <div class="card">
+      <div class="cal-controls">
+        <button id="cal-prev" aria-label="Previous year">&larr;</button>
+        <strong id="cal-year">2026</strong>
+        <button id="cal-next" aria-label="Next year">&rarr;</button>
+      </div>
+      <div id="cal-rows"></div>
+      <div class="cal-months" aria-hidden="true">
+        <span>J</span><span>F</span><span>M</span><span>A</span><span>M</span><span>J</span>
+        <span>J</span><span>A</span><span>S</span><span>O</span><span>N</span><span>D</span>
+      </div>
+      <p class="note cal-legend">Filled months are when a window is open. The outlined column is the current month. Dates are the common federal windows — state and employer dates can differ, so always confirm.</p>
+    </div>
+  </section>
+
+  <section class="view" id="view-countdowns" aria-label="Deadline countdowns">
+    <div id="count-cards" class="cards"></div>
+  </section>
+
+  <section class="view" id="view-checklists" aria-label="Document grab lists">
+    <div class="card no-print">
+      <h2>Document grab lists</h2>
+      <p class="muted">Before each window opens, gather what you'll need. Check items off as they go in your folder. Everything stays on this device.</p>
+    </div>
+    <div id="checklist-host"></div>
+  </section>
+
+  <section class="view" id="view-notes" aria-label="Call notes">
+    <div class="card">
+      <h2>Log a call</h2>
+      <form class="stack" id="note-form">
+        <div class="two-col">
+          <label><span class="lbl">Date</span><input type="date" id="note-date" required></label>
+          <label><span class="lbl">Who did you call?</span><input type="text" id="note-who" placeholder="e.g., HR benefits line"></label>
+        </div>
+        <div class="two-col">
+          <label><span class="lbl">Phone / reference (optional)</span><input type="text" id="note-phone" placeholder="e.g., 800-xxx-xxxx, ref #"></label>
+          <label><span class="lbl">Topic</span><input type="text" id="note-topic" placeholder="e.g., Asked about deductible"></label>
+        </div>
+        <label><span class="lbl">What they said</span><textarea id="note-text" placeholder="Keep it short: names, dates, what happens next."></textarea></label>
+        <button class="primary" type="submit">Save note</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Notes</h2>
+      <div id="notes-list"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-recap" aria-label="What changed recap">
+    <div class="card no-print">
+      <h2>Record a change</h2>
+      <p class="muted">New plan, new premium, new doctor, dropped coverage — log it when it happens so January-you has the full story.</p>
+      <form class="stack" id="change-form">
+        <div class="two-col">
+          <label><span class="lbl">Noticed on</span><input type="date" id="change-date" required></label>
+          <label><span class="lbl">Which coverage</span>
+            <select id="change-plan">
+              <option>Marketplace (ACA)</option>
+              <option>Medicare</option>
+              <option>Employer plan</option>
+              <option>Medicaid / CHIP</option>
+              <option>Dental / vision / other</option>
+            </select></label>
+        </div>
+        <label><span class="lbl">What changed</span><input type="text" id="change-what" placeholder="e.g., Switched to the $500-deductible HMO" required></label>
+        <div class="two-col">
+          <label><span class="lbl">Effective date (optional)</span><input type="date" id="change-effective"></label>
+          <label><span class="lbl">Premium change (optional)</span><input type="text" id="change-premium" placeholder="e.g., $210 → $185 per paycheck"></label>
+        </div>
+        <button class="primary" type="submit">Save change</button>
+      </form>
+      <div class="field-row no-print" style="margin-top:0.8rem">
+        <button class="primary" id="print-recap">Print recap</button>
+        <button class="ghost" id="mark-reviewed">Mark recap reviewed</button>
+      </div>
+    </div>
+    <div id="recap-content"></div>
+  </section>
+</main>
+
+<footer class="site">
+  <p>Built by <strong>Asdale Dynamics, LLC</strong> · MIT License · Works offline from a single file · All data stays in your browser's localStorage.</p>
+  <p>Pairs with the <em>Insurance Paperwork Decoded</em> guide. This tool is education and admin help only — it is not insurance, legal, tax, or medical advice. Verify dates with HealthCare.gov, Medicare.gov, your state Medicaid office, or your HR team.</p>
+</footer>
+
+</body>
+</html>
